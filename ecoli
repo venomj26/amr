@@ -203,7 +203,7 @@ numrows= cursor.execute("SELECT * FROM Ecoliastt LEFT JOIN Ecoliast ON Ecoliastt
 print("Selected %s rows" %numrows)
 print("Selected %s rows " %cursor.rowcount)
 rows =cursor.fetchall()#fetch all rows at once
-print(tabulate(rows, headers=['strain','AST_phenotype', 'AMR_genotype'], tablefmt='psql'))    
+#print(tabulate(rows, headers=['strain','AST_phenotype', 'AMR_genotype'], tablefmt='psql'))    
 dffinal = pd.DataFrame(rows) 
 
 #%%
@@ -392,7 +392,7 @@ for x in ecdrugs:
         print("Selected %s rows " %cursor.rowcount)
         rowx =cursor.fetchall()#fetch all rows at once
             #print(rows)
-        for tup in rows:
+        for tup in rowx:
             for elex in tup:
                 print (elex)
     except:
@@ -421,7 +421,7 @@ for x in ecdrugs:
             
             value=ele/elex
             print("the probability of resistance of %s when the sample is already resistant to %s is %s"%( y,x,value)  )
-            ecmatrix[countx][county]=value
+            ecmatrix[countx][county]=round(value,2)
             print("the matrix is: " ,ecmatrix)
         except:
             print("there is something wrong at line 425")
@@ -433,31 +433,71 @@ for x in ecdrugs:
 
 #%%
 
+#editing the matrix to look like the cross correlation matrix
+#%%
+    
+cross_df=pd.DataFrame(ecmatrix)
+#cross_df.drop()
+#cross_df=cross_df.reset_index()
+cross_df.columns=ecdrugs
+cross_df=cross_df.T
+cross_df.columns=ecdrugs
+cross_df=cross_df.T
+
+
+    
+#%%
+
+
+#Cross correlation matrix
+#%%
+
+from string import ascii_letters
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+sns.set(style="white")
+
+# Generate a large random dataset
+#rs = np.random.RandomState(33)
+#d = pd.DataFrame(data=rs.normal(size=(100, 26)),
+#                columns=list(ascii_letters[26:]))
+
+# Compute the correlation matrix
+#corr = d.corr()
+corr=cross_df
+# Generate a mask for the upper triangle
+#mask = np.zeros_like(corr, dtype=np.bool)
+#mask[np.triu_indices_from(mask)] = True
+
+# Set up the matplotlib figure
+f, ax = plt.subplots(figsize=(11, 9))
+
+# Generate a custom diverging colormap
+cmap = sns.diverging_palette(220, 10, as_cmap=True)
+
+# Draw the heatmap with the mask and correct aspect ratio
+sns.heatmap(corr, cmap=cmap, vmax=1, center=0,
+            square=True, linewidths=.5, cbar_kws={"shrink": .5})
+
+
+
+plt.title("Escherichia Coli")
+
+
+
+
+
 
 #%%
-    
- for x in ecdrugs:
-    for y in ecdrugs:
-        try:
-            
-            #county= county+1
-            sql=("SELECT COUNT(" + y + ") FROM ECAST where ( " + x + "='R' or " + x + "='I') and ( "+ y + "='I' or " + y + "='R')")
-            numrows= cursor.execute("SELECT COUNT(" + y + ") FROM ECAST where ( " + x + "='R' or " + x + "='I') and ( "+ y + "='I' or " + y + "='R')")
-            print(sql)
-            #print("Selected %s rows" %numrows)
-            #print("Selected %s rows " %cursor.rowcount)
-            rows =cursor.fetchall()#fetch all rows at once   
-            #print(tabulate(rows, headers=[ "count" ], tablefmt='psql'))
-            print (rows)
-            for tup in rows:
-                for ele in tup:
-                    print (ele)
-        except:
-            print("there is something wrong at line 396")
-            continue
-    
-    
-#%%
+
+
+
+
+
+
 
 
 
@@ -737,5 +777,51 @@ print("we are at line 356 in code")
 count=pd.value_counts(df_plotECS['percent_S'].values, sort=False)
 
 print("the number of nan values are",count)
+
+#%%
+
+
+
+
+
+
+#%%
+
+#writing the list of drugs into an excel file for classification
+
+# import xlsxwriter module 
+import xlsxwriter 
+  
+workbook = xlsxwriter.Workbook('Ecoli.xlsx') 
+worksheet = workbook.add_worksheet() 
+  
+# Start from the first cell. 
+# Rows and columns are zero indexed. 
+row = 0
+column = 0
+  
+content = header_list_AST
+  
+# iterating through content list 
+for item in content : 
+  
+    # write operation perform 
+    worksheet.write(row, column, item) 
+  
+    # incrementing the value of row by one 
+    # with each iteratons. 
+    row += 1
+      
+workbook.close() 
+
+
+
+
+
+
+
+
+
+
 
 #%%
